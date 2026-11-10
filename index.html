@@ -21,8 +21,50 @@
         <a-camera gps-camera rotation-reader></a-camera>
 
 
-        <a-entity gltf-model="./assets/magnemite/scene.gltf" rotation="0 180 0" scale="0.15 0.15 0.15" gps-entity-place="longitude: 20.624104; latitude: -103.417757;" animation-mixer/>
-
-20.62412653510048, -103.41775498047207
+        <!-- <a-entity gltf-model="./assets/magnemite/scene.gltf" rotation="0 180 0" scale="0.15 0.15 0.15" gps-entity-place="longitude: 20.624104; latitude: -103.417757;" animation-mixer/> -->
 	</a-scene>
+
+    <script>
+            window.onload = () => {
+
+                navigator.geolocation.getCurrentPosition(function (position) {    
+                    let places = staticLoadPlaces(position.coords.latitude, position.coords.longitude);
+                    renderPlaces(places);
+                });
+            };
+
+            function staticLoadPlaces(latitude, longitude) {
+                return [
+                    {
+                        name: 'Magnemite',
+                        location: {
+                            lat: latitude,
+                            lng: longitude,
+                        }
+                    },
+                ];
+            }
+
+            function renderPlaces(places) {
+                let scene = document.querySelector('a-scene');
+
+                places.forEach((place) => {
+                    let latitude = place.location.lat;
+                    let longitude = place.location.lng;
+
+                    let model = document.createElement('a-entity');
+                    model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
+                    model.setAttribute('gltf-model', './assets/magnemite/scene.gltf');
+                    model.setAttribute('rotation', '0 180 0');
+                    model.setAttribute('animation-mixer', '');
+                    model.setAttribute('scale', '0.5 0.5 0.5');
+
+                    model.addEventListener('loaded', () => {
+                        window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'))
+                    });
+
+                    scene.appendChild(model);
+                });
+            }
+    </script>
 </body>
