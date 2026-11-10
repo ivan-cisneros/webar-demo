@@ -13,18 +13,94 @@
 </head>
 
 <body style='margin: 0; overflow: hidden;'>
+
+     <div class="centered instructions"></div>
     <a-scene
         vr-mode-ui="enabled: false"
 		embedded
-        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: false;'>
+        arjs='sourceType: webcam; sourceWidth:1280; sourceHeight:960; displayWidth: 1280; displayHeight: 960; debugUIEnabled: true;'>
         
         <a-camera gps-camera rotation-reader></a-camera>
 
-
+        <a-assets>
+             <video 
+             src="./assets/video/video1.mp4"
+          id="video-container" 
+          crossorigin="anonymous"
+          playsinline 
+          webkit-playsinline>
+        </video>
+        </a-assets>
         <!-- <a-entity gltf-model="./assets/magnemite/scene.gltf" rotation="0 180 0" scale="0.15 0.15 0.15" gps-entity-place="longitude: 20.624104; latitude: -103.417757;" animation-mixer/> -->
+
+         <a-plane 
+        src="#video-container" 
+        position="0 1.5 -2" 
+        width="1.77" 
+        height="1" 
+        rotation="-50 0 0"
+        material="shader: flat; side: double; opacity: 0.7;"
+        id="video-plane">
+      </a-plane>
 	</a-scene>
 
+   
+
+    <div class="centered">
+    <button data-action="change"></button>
+</div>
+
+<style>
+    .centered {
+    height: 20%;
+    justify-content: center;
+    position: fixed;
+    bottom: 0%;
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    margin: 0px auto;
+    left: 0;
+    right: 0;
+}
+
+button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid white;
+    background-color: transparent;
+    width: 2em;
+    height: 2em;
+    border-radius: 100%;
+    font-size: 2em;
+    background-color: rgba(0, 0, 0, 0.4);
+    color: white;
+    outline: none;
+}
+
+.instructions {
+    position: fixed;
+    top: 5%;
+    font-size: 1.25em;
+    color: white;
+    z-index: 999999;
+}
+
+/* a-assets, a-scene audio, a-scene img, a-scene video {
+    display: block;
+} */
+</style>
+
     <script>
+
+        // const videoEl = document.createElement('video');
+        //                 videoEl.setAttribute('loop', 'true');
+        //                 videoEl.setAttribute('crossorigin', 'anonymous');
+        //                 videoEl.setAttribute('playsinline', 'true');
+        //                 videoEl.setAttribute('webkit-playsinline', 'true');
+        //                 videoEl.setAttribute('id', 'video-container');
+
             window.onload = () => {
 
                 navigator.geolocation.getCurrentPosition(function (position) {    
@@ -36,7 +112,7 @@
             function staticLoadPlaces(latitude, longitude) {
                 return [
                     {
-                        name: 'Magnemite',
+                        name: 'Objects',
                         location: {
                             lat: latitude,
                             lng: longitude,
@@ -45,25 +121,108 @@
                 ];
             }
 
+            var models = [
+                {
+                    url: './assets/magnemite/scene.gltf',
+                    scale: '0.5 0.5 0.5',
+                    info: 'Magnemite, Lv. 5, HP 10/10',
+                    rotation: '0 180 0',
+                    type: 'gltf',
+                },
+                {
+                    url: './assets/video/video1.mp4',
+                    // scale: '0.2 0.2 0.2',
+                    // rotation: '0 180 0',
+                    info: 'Video',
+                    type: 'video',
+                },
+                // {
+                //     url: './assets/dragonite/scene.gltf',
+                //     scale: '0.08 0.08 0.08',
+                //     rotation: '0 180 0',
+                //     info: 'Dragonite, Lv. 99, HP 150/150',
+                // },
+            ];
+
+            var modelIndex = 0;
+            var setModel = function (model, entity) {
+                if (model.scale) {
+                    entity.setAttribute('scale', model.scale);
+                }
+
+                if (model.rotation) {
+                    entity.setAttribute('rotation', model.rotation);
+                }
+
+                if (model.position) {
+                    entity.setAttribute('position', model.position);
+                }
+
+                if (model.type === 'gltf') {
+                    entity.setAttribute('gltf-model', model.url);
+                } else if (model.type === 'video') {
+                    entity.setAttribute('src', model.url);
+                    entity.setAttribute('preload', 'auto');
+                    entity.setAttribute('loop', 'true');
+                }
+
+                const div = document.querySelector('.instructions');
+                div.innerText = model.info;
+            };
+
             function renderPlaces(places) {
                 let scene = document.querySelector('a-scene');
+                let assets = document.querySelector('a-assets');
 
                 places.forEach((place) => {
                     let latitude = place.location.lat;
                     let longitude = place.location.lng;
 
                     let model = document.createElement('a-entity');
+                   
+                    
                     model.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
-                    model.setAttribute('gltf-model', './assets/magnemite/scene.gltf');
-                    model.setAttribute('rotation', '0 180 0');
-                    model.setAttribute('animation-mixer', '');
-                    model.setAttribute('scale', '0.5 0.5 0.5');
+                    
+                    
+                    
+                    // const videoPlane = document.createElement('a-plane');
+                    //     videoPlane.setAttribute('id', 'video-plane');
+                    //     videoPlane.setAttribute('position', '0 0 0');
+                    //     videoPlane.setAttribute('width', '1');
+                    //     videoPlane.setAttribute('height', '1');
+                    //     videoPlane.setAttribute('material', 'shader:flat');
+                    //     videoPlane.setAttribute('src', '#video-container');
 
-                    model.addEventListener('loaded', () => {
-                        window.dispatchEvent(new CustomEvent('gps-entity-place-loaded'))
+                    //     videoPlane.setAttribute('gps-entity-place', `latitude: ${latitude}; longitude: ${longitude};`);
+
+                    // model.appendChild(videoPlane);
+
+                    setModel(models[modelIndex], model);
+
+                    model.setAttribute('animation-mixer', '');
+
+                    document.querySelector('button[data-action="change"]').addEventListener('click', function () {
+                        var entityModel = document.querySelector('[gps-entity-place]');
+                        var entityVideo = document.querySelector('#video-container');
+                        var videoPlane = document.querySelector('#video-plane');
+                        modelIndex++;
+                        var newIndex = modelIndex % models.length;
+                        var model = models[newIndex];
+                        setModel(model, model.type === 'video' ? entityVideo : entityModel);
+
+                        if (model.type === 'video') {
+                            entityModel.setAttribute('visible', 'false');
+                            videoPlane.setAttribute('visible', 'true');
+                            entityVideo.controls = true;
+                            entityVideo.play();
+                        } else {
+                            entityModel.setAttribute('visible', 'true');
+                           videoPlane.setAttribute('visible', 'false');
+                        }
                     });
 
                     scene.appendChild(model);
+                    //assets.appendChild(modelVideo);
                 });
             }
     </script>
